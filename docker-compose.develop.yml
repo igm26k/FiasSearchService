@@ -1,0 +1,53 @@
+version: '3.1'
+services:
+  prebuild_web:
+    image: composer
+    command: install --no-interaction --ignore-platform-reqs
+    volumes:
+      - ./:/app
+      - ${HOME}/.composer/igm26k-fias:/tmp/
+
+  # Сервис Web приложения
+  web:
+    container_name: fias_web
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - 8083:80
+    working_dir: /var/www/html
+
+  # База данных
+  mysql:
+    container_name: fias_mysql
+    restart: unless-stopped
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - /media/igolubev/fiasData/databases/mysql:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - 3308:3306
+
+  # Полнотекстовая поисковая машина
+  sphinxsearch:
+    container_name: fias_sphinx
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: docker/sphinxsearch/Dockerfile
+    volumes:
+      - ./sphinxsearch/sphinx.conf:/opt/sphinx/conf/sphinx.conf
+      - ./sphinxsearch/base.conf:/opt/sphinx/conf/base.conf
+      - ./sphinxsearch/idxFiasHouse.conf:/opt/sphinx/conf/idxFiasHouse.conf
+      - ./sphinxsearch/idxFiasObject.conf:/opt/sphinx/conf/idxFiasObject.conf
+#      - ./sphinxsearch/idxAddress.conf:/opt/sphinx/conf/idxAddress.conf
+      - ./secrets.json:/secrets/secrets.json
+
+volumes:
+  sphinx:
+    driver: "local"

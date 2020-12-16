@@ -1,0 +1,54 @@
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location = /updateIndexes {
+		rewrite /(.*) /index.html?processname=sphinx-updateIndexes&action=start break;
+		# VERY BAD HEADER
+		proxy_set_header Authorization "Basic c3VwZXJhZG1pbjoyMTFhOTQ2ZjE0ZmVkNGU3MDQyNTliNTdkMDc5MmMxOQ==";
+		proxy_set_header Host $http_host;
+		proxy_method     GET;
+		proxy_pass       http://127.0.0.1:9001/;
+	}
+
+	location = /supervisor {
+		return 301 $scheme://$http_host$request_uri/;
+	}
+	location ~/supervisor/ {
+
+		rewrite ^/supervisor(.*)$ /$1 break;
+
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header Host $http_host;
+		proxy_redirect   off;
+		proxy_pass       http://127.0.0.1:9001;
+
+	}
+
+
+	# TODO
+	# waiting https://github.com/Supervisor/supervisor/pull/593
+	location / {
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header Host $http_host;
+		proxy_redirect off;
+		rewrite ^/supervisor(.*)$ /$1 break;
+		if ( $args ~ "message=Process" ) {
+			add_header Content-Type text/html;
+			return 200;
+		}
+		if ( $args ~ "processname=|message=" ) {
+			add_header Content-Type text/html;
+			return 301 $scheme://$http_host/supervisor$request_uri;
+		}
+
+		try_files $uri $uri/ =404;
+	}
+
+}

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# Use:
+# ./scripts/bash fias_web
+# ./scripts/bash fias_mysql
+# ./scripts/bash fias_sphinx
+
+docker exec -ti $@ bash

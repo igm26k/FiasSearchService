@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+docker exec bus_web composer $@

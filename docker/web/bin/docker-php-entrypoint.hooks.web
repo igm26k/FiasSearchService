@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+echo "begin hook ${0}"
+
+chown www-data:www-data /var/www/html/secretsTemplate.json
+chown www-data:www-data /var/www/html/storage -hR
+
+# laravel-migrate
+if [ "${DISABLE_LARAVEL_MIGRATE}" != "1" ]; then
+    echo "run laravel migrations"
+    ./artisan migrate --force
+else
+    echo "LARAVEL_MIGRATE: Disabled (\$DISABLE_LARAVEL_MIGRATE)"
+fi
+
+echo "end hook ${0}"

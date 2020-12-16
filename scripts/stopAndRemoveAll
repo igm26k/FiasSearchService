@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+docker stop fias_web fias_mysql fias_sphinx
+docker rm fias_web fias_mysql fias_sphinx
